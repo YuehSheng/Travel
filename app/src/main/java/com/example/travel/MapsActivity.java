@@ -2,6 +2,7 @@ package com.example.travel;
 
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
+import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
@@ -11,6 +12,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -27,12 +29,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.travel.databinding.ActivityMapsBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.security.Permission;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -45,6 +51,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public String commadStr = LocationManager.GPS_PROVIDER;
 
     public FloatingActionButton myLoc;
+    public Circle curLoc;
     public FloatingActionButton changeMap;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -59,33 +66,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-
-        /*boolean locHasGone = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-
-        boolean externalHasGone = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            String[] permissions;
-            if (!locHasGone && !externalHasGone) {//如果兩個權限都未取得
-                permissions = new String[2];
-                permissions[0] = Manifest.permission.ACCESS_FINE_LOCATION;
-                permissions[1] = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-            } else if (!locHasGone) {//如果只有相機權限未取得
-                permissions = new String[1];
-                permissions[0] = Manifest.permission.ACCESS_FINE_LOCATION;
-            } else if (!externalHasGone) {//如果只有存取權限未取得
-                permissions = new String[1];
-                permissions[0] = Manifest.permission.WRITE_EXTERNAL_STORAGE;
-            } else {
-
-                return;
-            }
-            requestPermissions(permissions, 100);
-        }*/
-
 
     }
 
@@ -108,17 +88,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
-
+        //loc button
         myLoc = (FloatingActionButton) findViewById(R.id.myLoc);
         myLoc.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-                if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(MapsActivity.this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
                     //    ActivityCompat#requestPermissions
                     // here to request the missing permissions, and then overriding
-                    ActivityCompat.requestPermissions(MapsActivity.this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},11);
+                    ActivityCompat.requestPermissions(MapsActivity.this,new String[]{ACCESS_FINE_LOCATION}, 12);
 
                     //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
                     //                                          int[] grantResults)
@@ -130,10 +110,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Location location = locationManager.getLastKnownLocation(commadStr);
                 LatLng loc = new LatLng(location.getLatitude(),location.getLongitude());
                 BitmapDescriptor descriptor = BitmapDescriptorFactory.fromResource(R.drawable.pos);
-                mMap.addMarker(new MarkerOptions().position(loc).icon(descriptor));
+//                mMap.addMarker(new MarkerOptions().position(loc).icon(descriptor));
+                curLoc = mMap.addCircle(new CircleOptions().center(loc).radius(100000).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));
+                
 
                 //move camera to user's position
-                final CameraPosition cameraPosition = new CameraPosition.Builder().target(loc).zoom(13).build();
+                final CameraPosition cameraPosition = new CameraPosition.Builder().target(loc).zoom(3).build();
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1500, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onCancel() {
@@ -146,6 +128,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
             }
+
+
         });
 
 
@@ -163,38 +147,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(@NonNull Location location) {
-
+//            Circle oldLoc = curLoc;
+            LatLng loc = new LatLng(location.getLatitude(),location.getLongitude());
+            CameraPosition cameraPosition =  mMap.getCameraPosition();
+            float zoomSize = (float)cameraPosition.zoom;
+            double PX = 5*156543.03392 * Math.cos(location.getLatitude() * Math.PI / 180) / Math.pow(2, zoomSize);
+            curLoc.setRadius(PX);
+            System.out.println(zoomSize+"  "+curLoc.getRadius());
         }
     };
-
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        StringBuffer word = new StringBuffer();
-//        switch (permissions.length) {
-//            case 1:
-//                if (permissions[0].equals(Manifest.permission.CAMERA)) word.append("位置權限");
-//                else word.append("儲存權限");
-//                if (grantResults[0] == 0) word.append("已取得");
-//                else word.append("未取得");
-//                word.append("\n");
-//                if (permissions[0].equals(Manifest.permission.CAMERA)) word.append("儲存權限");
-//                else word.append("位置權限");
-//                word.append("已取得");
-//
-//                break;
-//            case 2:
-//                for (int i = 0; i < permissions.length; i++) {
-//                    if (permissions[i].equals(Manifest.permission.CAMERA)) word.append("位置權限");
-//                    else word.append("儲存權限");
-//                    if (grantResults[i] == 0) word.append("已取得");
-//                    else word.append("未取得");
-//                    if (i < permissions.length - 1) word.append("\n");
-//                }
-//                break;
-//        }
-//        Toast.makeText(this, word.toString(), Toast.LENGTH_LONG).show();
-//    }
 
 
 
