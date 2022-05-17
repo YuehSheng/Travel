@@ -11,6 +11,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -20,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -32,6 +34,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.travel.databinding.ActivityMapsBinding;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -47,12 +50,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private int MapType;
 
     public LocationManager locationManager;
+    public CameraPosition cameraPosition;
+    public Location curPos;
+    Dialog dialog;
+    AlertDialog alertDialog;
+    EditText title,snippet;
+    Button add,cancel;
 
-    public String commadStr = LocationManager.GPS_PROVIDER;
+    public String commandStr = LocationManager.GPS_PROVIDER;
 
     public FloatingActionButton myLoc;
     public Circle curLoc;
     public FloatingActionButton changeMap;
+    public FloatingActionButton addMarker;
+    public Marker marker;
+
+    /*1 => add marker
+    * 2 => set marker
+    * */
+    public int state = 1;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -66,7 +82,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
     }
 
     /**
@@ -83,10 +98,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         MapType = GoogleMap.MAP_TYPE_NORMAL;
+
+
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        LatLng feng = new LatLng(24.178043381577726, 120.64712031103305);
+//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        cameraPosition = new CameraPosition.Builder().target(feng).zoom(13).build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
 
         //loc button
         myLoc = (FloatingActionButton) findViewById(R.id.myLoc);
@@ -106,17 +125,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // for ActivityCompat#requestPermissions for more details.
                     return;
                 }
-                locationManager.requestLocationUpdates(commadStr, 1000, 0,locationListener);
-                Location location = locationManager.getLastKnownLocation(commadStr);
+                locationManager.requestLocationUpdates(commandStr, 1000, 0,locationListener);
+                Location location = locationManager.getLastKnownLocation(commandStr);
                 LatLng loc = new LatLng(location.getLatitude(),location.getLongitude());
                 BitmapDescriptor descriptor = BitmapDescriptorFactory.fromResource(R.drawable.pos);
 //                mMap.addMarker(new MarkerOptions().position(loc).icon(descriptor));
-                curLoc = mMap.addCircle(new CircleOptions().center(loc).radius(100000).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));
+                curLoc = mMap.addCircle(new CircleOptions().center(loc).radius(100).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));
                 
 
                 //move camera to user's position
-                final CameraPosition cameraPosition = new CameraPosition.Builder().target(loc).zoom(3).build();
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1500, new GoogleMap.CancelableCallback() {
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(loc).zoom(13).build()), 1500, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onCancel() {
 
@@ -141,7 +159,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        addMarker = (FloatingActionButton) findViewById(R.id.addMarker);
+        addMarker.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(state == 1){//add
+                    BitmapDescriptor descriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+                    marker = mMap.addMarker(new MarkerOptions().position(mMap.getCameraPosition().target).icon(descriptor));
+                    marker.setDraggable(true);
+                    state = 2;
+                    addMarker.setImageResource(android.R.drawable.ic_menu_save);
+                }
+                else if(state == 2){//set
+                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
 
+                    //show dialog and set title snippet
+                    addMarker.setImageResource(android.R.drawable.ic_menu_add);
+                    marker.setDraggable(false);
+                    state = 1;
+                }
+
+            }
+        });
     }
 
     LocationListener locationListener = new LocationListener() {
@@ -149,11 +188,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onLocationChanged(@NonNull Location location) {
 //            Circle oldLoc = curLoc;
             LatLng loc = new LatLng(location.getLatitude(),location.getLongitude());
-            CameraPosition cameraPosition =  mMap.getCameraPosition();
-            float zoomSize = (float)cameraPosition.zoom;
+            cameraPosition =  mMap.getCameraPosition();
+            float zoomSize = cameraPosition.zoom;
             double PX = 5*156543.03392 * Math.cos(location.getLatitude() * Math.PI / 180) / Math.pow(2, zoomSize);
             curLoc.setRadius(PX);
-            System.out.println(zoomSize+"  "+curLoc.getRadius());
+            System.out.println(cameraPosition);
         }
     };
 
