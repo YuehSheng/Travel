@@ -11,6 +11,9 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -21,6 +24,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.travel.databinding.ActivityMapsBinding;
@@ -33,6 +39,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
     private int MapType;
+
+    public LocationManager locationManager;
+
+    public String commadStr = LocationManager.GPS_PROVIDER;
 
     public FloatingActionButton myLoc;
     public FloatingActionButton changeMap;
@@ -51,7 +61,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
 
-        boolean locHasGone = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        /*boolean locHasGone = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
 
         boolean externalHasGone = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -74,7 +84,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 return;
             }
             requestPermissions(permissions, 100);
-        }
+        }*/
 
 
     }
@@ -100,6 +110,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         myLoc = (FloatingActionButton) findViewById(R.id.myLoc);
+        myLoc.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+                if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    ActivityCompat.requestPermissions(MapsActivity.this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},11);
+
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                locationManager.requestLocationUpdates(commadStr, 1000, 0,locationListener);
+                Location location = locationManager.getLastKnownLocation(commadStr);
+                LatLng loc = new LatLng(location.getLatitude(),location.getLongitude());
+                BitmapDescriptor descriptor = BitmapDescriptorFactory.fromResource(R.drawable.pos);
+                mMap.addMarker(new MarkerOptions().position(loc).icon(descriptor));
+
+                //move camera to user's position
+                final CameraPosition cameraPosition = new CameraPosition.Builder().target(loc).zoom(13).build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1500, new GoogleMap.CancelableCallback() {
+                    @Override
+                    public void onCancel() {
+
+                    }
+
+                    @Override
+                    public void onFinish() {
+
+                    }
+                });
+            }
+        });
+
+
         changeMap = (FloatingActionButton) findViewById(R.id.changeMap);
         changeMap.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,6 +159,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     }
+
+    LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(@NonNull Location location) {
+
+        }
+    };
 
 //    @Override
 //    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
