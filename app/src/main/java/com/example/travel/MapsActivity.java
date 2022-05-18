@@ -12,6 +12,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -53,8 +54,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public CameraPosition cameraPosition;
     public Location curPos;
     Dialog dialog;
-    AlertDialog alertDialog;
-    EditText title,snippet;
+    AlertDialog.Builder alertDialog;
+    EditText title,date;
     Button add,cancel;
 
     public String commandStr = LocationManager.GPS_PROVIDER;
@@ -78,6 +79,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        initAddMarkerDialog();
+        initRemoveMarkerDialog();
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -95,18 +99,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         MapType = GoogleMap.MAP_TYPE_NORMAL;
 
-        curLoc = mMap.addCircle(new CircleOptions().center(new LatLng(24.178043381577726, 120.64712031103305)).radius(100).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));;
+        curLoc = googleMap.addCircle(new CircleOptions().center(new LatLng(24.178043381577726, 120.64712031103305)).radius(100).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));;
         curLoc.setVisible(false);
 
         LatLng feng = new LatLng(24.178043381577726, 120.64712031103305);
 //        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         cameraPosition = new CameraPosition.Builder().target(feng).zoom(13).build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
+        initInfoWindowClick(googleMap);
+//        initMapClick(googleMap);
 
         //loc button
         myLoc = (FloatingActionButton) findViewById(R.id.myLoc);
@@ -150,7 +155,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
             }
 
-
         });
 
 
@@ -158,7 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         changeMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                changeMapType(mMap);
+                changeMapType(googleMap);
             }
         });
 
@@ -166,23 +170,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         addMarker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(state == 1){//add
-                    BitmapDescriptor descriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
-                    marker = mMap.addMarker(new MarkerOptions().position(mMap.getCameraPosition().target).icon(descriptor));
-                    marker.setDraggable(true);
-                    state = 2;
-                    addMarker.setImageResource(android.R.drawable.ic_menu_save);
-                }
-                else if(state == 2){//set
-                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
-
-                    //show dialog and set title,snippet here
-
-                    addMarker.setImageResource(android.R.drawable.ic_menu_add);
-                    marker.setDraggable(false);
-                    state = 1;
-                }
-
+                addMarkerButton(googleMap);
             }
         });
     }
@@ -199,9 +187,111 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
+    //function about adding and setting marker
+    public void addMarkerButton(GoogleMap googleMap){
+        if(state == 1){//add
+            BitmapDescriptor descriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+            marker = googleMap.addMarker(new MarkerOptions().position(googleMap.getCameraPosition().target).icon(descriptor));
+            marker.setDraggable(true);
+            state = 2;
+            addMarker.setImageResource(android.R.drawable.ic_menu_save);
+        }
+        else if(state == 2){//set
+
+            //show dialog and set title,snippet here
+            title.setText("");
+            date.setText("");
+            dialog.show();
+            add.setOnClickListener(view -> {
+                if(title.getText().toString().isEmpty() || date.getText().toString().isEmpty()){
+                    Toast.makeText(getApplicationContext(), "Title fields can't be empty", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
+                    marker.setDraggable(false);
+                    marker.setTitle(title.getText().toString());
+                    marker.setSnippet(date.getText().toString());
+                    addMarker.setImageResource(android.R.drawable.ic_menu_add);
+                    state = 1;
+                    dialog.dismiss();
+                }
+            });
+            cancel.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    dialog.dismiss();
+                }
+            });
+
+
+
+        }
+    }
+
 
 
     public void changeMapType(GoogleMap googleMap){
         mMap.setMapType((mMap.getMapType()%4)+1);
     }
+
+    public void initAddMarkerDialog(){
+        dialog = new Dialog(this);
+        dialog.setTitle("Add marker!");
+        dialog.setContentView(R.layout.dialog_add);
+        title = (EditText) dialog.findViewById(R.id.title);
+        date = (EditText) dialog.findViewById(R.id.date);
+        add = (Button) dialog.findViewById(R.id.add);
+        cancel = (Button) dialog.findViewById(R.id.cancel);
+    }
+
+    public void initRemoveMarkerDialog(){
+        alertDialog = new AlertDialog.Builder(this);
+        alertDialog.setTitle("Delete Marker !");
+        alertDialog.setMessage("Do you want to delete the Marker!");
+    }
+    public void initInfoWindowClick(GoogleMap googleMap){
+        googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+            @Override
+            public void onInfoWindowClick(@NonNull Marker marker) {
+                alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        marker.remove();
+                    }
+                });
+                alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialog.dismiss();
+                    }
+                });
+                alertDialog.show();
+            }
+
+        });
+    }
+
+//    public void initMapClick(GoogleMap googleMap){
+//        googleMap.setOnMapClickListener(latLng -> {
+//            title.setText("");
+//            date.setText("");
+//            dialog.show();
+//            add.setOnClickListener(view -> {
+//                if(title.getText().toString().isEmpty() || date.getText().toString().isEmpty()){
+//                    Toast.makeText(getApplicationContext(), "Title fields can't be empty", Toast.LENGTH_SHORT).show();
+//                }
+//                else{
+//                    googleMap.addMarker(new MarkerOptions().position(latLng).title(title.getText().toString()).snippet(date.getText().toString()));
+//
+//                    dialog.dismiss();
+//                }
+//            });
+//            cancel.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    dialog.dismiss();
+//                }
+//            });
+//        });
+//    }
 }

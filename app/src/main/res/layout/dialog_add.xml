@@ -8,11 +8,15 @@
         android:hint="Title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
     <EditText
-        android:id="@+id/snippet"
-        android:hint="Snippet"
+        android:id="@+id/date"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="Date"
+        android:inputType="date" />
+
     <Button
         android:id="@+id/add"
         android:hint="Add"
