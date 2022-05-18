@@ -70,7 +70,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     * */
     public int state = 1;
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
+//    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,8 +99,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         MapType = GoogleMap.MAP_TYPE_NORMAL;
 
+        curLoc = mMap.addCircle(new CircleOptions().center(new LatLng(24.178043381577726, 120.64712031103305)).radius(100).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));;
+        curLoc.setVisible(false);
 
-        // Add a marker in Sydney and move the camera
         LatLng feng = new LatLng(24.178043381577726, 120.64712031103305);
 //        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         cameraPosition = new CameraPosition.Builder().target(feng).zoom(13).build();
@@ -128,13 +129,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 locationManager.requestLocationUpdates(commandStr, 1000, 0,locationListener);
                 Location location = locationManager.getLastKnownLocation(commandStr);
                 LatLng loc = new LatLng(location.getLatitude(),location.getLongitude());
+                System.out.println(loc);
                 BitmapDescriptor descriptor = BitmapDescriptorFactory.fromResource(R.drawable.pos);
 //                mMap.addMarker(new MarkerOptions().position(loc).icon(descriptor));
-                curLoc = mMap.addCircle(new CircleOptions().center(loc).radius(100).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));
-                
+                curLoc.setCenter(loc);
+                curLoc.setVisible(true);
+
 
                 //move camera to user's position
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(loc).zoom(13).build()), 1500, new GoogleMap.CancelableCallback() {
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(loc).zoom(mMap.getCameraPosition().zoom).build()), 1500, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onCancel() {
 
@@ -173,7 +176,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 else if(state == 2){//set
                     marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
 
-                    //show dialog and set title snippet
+                    //show dialog and set title,snippet here
+
                     addMarker.setImageResource(android.R.drawable.ic_menu_add);
                     marker.setDraggable(false);
                     state = 1;
@@ -188,11 +192,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onLocationChanged(@NonNull Location location) {
 //            Circle oldLoc = curLoc;
             LatLng loc = new LatLng(location.getLatitude(),location.getLongitude());
-            cameraPosition =  mMap.getCameraPosition();
-            float zoomSize = cameraPosition.zoom;
+            float zoomSize = mMap.getCameraPosition().zoom;
             double PX = 5*156543.03392 * Math.cos(location.getLatitude() * Math.PI / 180) / Math.pow(2, zoomSize);
             curLoc.setRadius(PX);
-            System.out.println(cameraPosition);
+//            System.out.println(cameraPosition);
         }
     };
 
