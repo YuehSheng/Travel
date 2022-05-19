@@ -46,6 +46,20 @@
         map:layout_constraintVertical_bias="0.95" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/cancelMarker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#F22B6A"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        map:fabSize="auto"
+        map:layout_constraintBottom_toBottomOf="parent"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintHorizontal_bias="0.045"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintTop_toTopOf="parent"
+        map:layout_constraintVertical_bias="0.85" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/changeMap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -64,6 +64,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public Circle curLoc;
     public FloatingActionButton changeMap;
     public FloatingActionButton addMarker;
+    public FloatingActionButton cancelMarker;
     public Marker marker;
 
     /*1 => add marker
@@ -173,6 +174,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 addMarkerButton(googleMap);
             }
         });
+
+        cancelMarker = (FloatingActionButton) findViewById(R.id.cancelMarker);
+        cancelMarker.hide();
+        cancelMarker.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                marker.remove();
+                addMarker.setImageResource(android.R.drawable.ic_menu_add);
+                state = 1;
+                cancelMarker.hide();
+            }
+        });
     }
 
     LocationListener locationListener = new LocationListener() {
@@ -194,6 +207,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             marker = googleMap.addMarker(new MarkerOptions().position(googleMap.getCameraPosition().target).icon(descriptor));
             marker.setDraggable(true);
             state = 2;
+            cancelMarker.show();
             addMarker.setImageResource(android.R.drawable.ic_menu_save);
         }
         else if(state == 2){//set
@@ -213,6 +227,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     marker.setSnippet(date.getText().toString());
                     addMarker.setImageResource(android.R.drawable.ic_menu_add);
                     state = 1;
+                    cancelMarker.hide();
                     dialog.dismiss();
                 }
             });
@@ -253,6 +268,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(@NonNull Marker marker) {
+
                 alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
