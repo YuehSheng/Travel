@@ -244,7 +244,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void changeMapType(GoogleMap googleMap){
-        mMap.setMapType((mMap.getMapType()%4)+1);
+        googleMap.setMapType((googleMap.getMapType()%4)+1);
     }
 
     public void initAddMarkerDialog(){
