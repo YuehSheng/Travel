@@ -13,6 +13,7 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -102,6 +103,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         MapType = GoogleMap.MAP_TYPE_NORMAL;
+        mMap = googleMap;
 
         curLoc = googleMap.addCircle(new CircleOptions().center(new LatLng(24.178043381577726, 120.64712031103305)).radius(100).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));;
         curLoc.setVisible(false);
@@ -284,7 +286,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 alertDialog.setNeutralButton("Edit", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int i) {
-
+                        Intent intent = new Intent();
+                        intent.setClass(MapsActivity.this,LocationInfo.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("Title",marker.getTitle());
+                        bundle.putString("Date",marker.getSnippet());
+                        bundle.putString("MarkerID",marker.getId());
+                        intent.putExtras(bundle);
+                        startActivity(intent);
                     }
                 });
                 alertDialog.show();
