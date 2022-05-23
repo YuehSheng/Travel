@@ -14,11 +14,13 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -55,9 +57,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public CameraPosition cameraPosition;
     public Location curPos;
     Dialog dialog;
+    Dialog navigation;
     AlertDialog.Builder alertDialog;
     EditText title,date;
     Button add,cancel;
+    public Button walk,bicycle,drive;
+
+    String uriString;
 
     public String commandStr = LocationManager.GPS_PROVIDER;
 
@@ -76,6 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        System.out.println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
         super.onCreate(savedInstanceState);
 
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
@@ -83,6 +90,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         initAddMarkerDialog();
         initRemoveMarkerDialog();
+        initNavigationDialog();
+        //refresh all marker and delete spot
+//        SharedPreferences pref =  getSharedPreferences("Marker",MODE_PRIVATE);
+//        String pref.getAll();
+
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -101,6 +113,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        System.out.println("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         MapType = GoogleMap.MAP_TYPE_NORMAL;
         mMap = googleMap;
@@ -261,29 +274,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         cancel = (Button) dialog.findViewById(R.id.cancel);
     }
 
+    public void initNavigationDialog(){
+        navigation = new Dialog(this);
+        navigation.setTitle("Add marker!");
+        navigation.setContentView(R.layout.navigation);
+        walk = (Button) navigation.findViewById(R.id.walk);
+        bicycle = (Button) navigation.findViewById(R.id.bicycle);
+        drive = (Button) navigation.findViewById(R.id.drive);
+
+        walk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                uriString = String.format("google.navigation:q="+marker.getPosition().latitude+","+marker.getPosition().longitude+"&mode=w");
+                launchMap();
+            }
+        });
+        bicycle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                uriString = String.format("google.navigation:q="+marker.getPosition().latitude+","+marker.getPosition().longitude+"&mode=b");
+                launchMap();
+            }
+        });
+        drive.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                uriString = String.format("google.navigation:q="+marker.getPosition().latitude+","+marker.getPosition().longitude+"&mode=d");
+                launchMap();
+            }
+        });
+    }
+
     public void initRemoveMarkerDialog(){
         alertDialog = new AlertDialog.Builder(this);
-        alertDialog.setTitle("Delete Marker !");
-        alertDialog.setMessage("Do you want to Edit/Delete the Marker?");
+        alertDialog.setTitle("請選取動作");
+        alertDialog.setMessage("點擊視窗外可返回");
     }
     public void initInfoWindowClick(GoogleMap googleMap){
         googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(@NonNull Marker marker) {
 
-                alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                alertDialog.setPositiveButton("導航", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        marker.remove();
+                        navigation.show();
                     }
                 });
-                alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        dialog.dismiss();
-                    }
-                });
-                alertDialog.setNeutralButton("Edit", new DialogInterface.OnClickListener() {
+                alertDialog.setNegativeButton("編輯", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int i) {
                         Intent intent = new Intent();
@@ -295,6 +333,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         intent.putExtras(bundle);
                         startActivity(intent);
                     }
+
+                });
+                alertDialog.setNeutralButton("刪除", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        marker.remove();
+                        dialog.dismiss();
+                    }
+
                 });
                 alertDialog.show();
             }
@@ -302,6 +349,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    public void launchMap(){
+        Uri intentUri = Uri.parse(uriString);
+        Intent intent = new Intent(Intent.ACTION_VIEW,intentUri);
+        intent.setPackage("com.google.android.apps.maps");
+
+        if(intent.resolveActivity(getPackageManager())!= null){
+            startActivity(intent);
+        }
+    }
 //    public void initMapClick(GoogleMap googleMap){
 //        googleMap.setOnMapClickListener(latLng -> {
 //            title.setText("");
