@@ -102,7 +102,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         MapType = GoogleMap.MAP_TYPE_NORMAL;
-        mMap = googleMap;
+
         curLoc = googleMap.addCircle(new CircleOptions().center(new LatLng(24.178043381577726, 120.64712031103305)).radius(100).fillColor(0xff00dfff).strokeWidth(3).strokeColor(Color.CYAN));;
         curLoc.setVisible(false);
 
@@ -143,7 +143,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                 //move camera to user's position
-                googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(loc).zoom(googleMap.getCameraPosition().zoom).build()), 1500, new GoogleMap.CancelableCallback() {
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder().target(loc).zoom(mMap.getCameraPosition().zoom).build()), 1500, new GoogleMap.CancelableCallback() {
                     @Override
                     public void onCancel() {
 
@@ -243,6 +243,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+
     public void changeMapType(GoogleMap googleMap){
         googleMap.setMapType((googleMap.getMapType()%4)+1);
     }
@@ -262,7 +264,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         alertDialog.setTitle("Delete Marker !");
         alertDialog.setMessage("Do you want to Edit/Delete the Marker?");
     }
-
     public void initInfoWindowClick(GoogleMap googleMap){
         googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
@@ -292,4 +293,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+//    public void initMapClick(GoogleMap googleMap){
+//        googleMap.setOnMapClickListener(latLng -> {
+//            title.setText("");
+//            date.setText("");
+//            dialog.show();
+//            add.setOnClickListener(view -> {
+//                if(title.getText().toString().isEmpty() || date.getText().toString().isEmpty()){
+//                    Toast.makeText(getApplicationContext(), "Title fields can't be empty", Toast.LENGTH_SHORT).show();
+//                }
+//                else{
+//                    googleMap.addMarker(new MarkerOptions().position(latLng).title(title.getText().toString()).snippet(date.getText().toString()));
+//
+//                    dialog.dismiss();
+//                }
+//            });
+//            cancel.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    dialog.dismiss();
+//                }
+//            });
+//        });
+//    }
 }
