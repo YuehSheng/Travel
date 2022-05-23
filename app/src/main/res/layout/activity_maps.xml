@@ -17,7 +17,7 @@
         android:layout_height="match_parent"
         tools:context=".MapsActivity"
         tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="-141dp" />
+        tools:layout_editor_absoluteY="0dp" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/myLoc"
@@ -27,10 +27,10 @@
         map:fabSize="auto"
         map:layout_constraintBottom_toBottomOf="parent"
         map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintHorizontal_bias="0.95"
+        map:layout_constraintHorizontal_bias="0.954"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintVertical_bias="0.95" />
+        map:layout_constraintVertical_bias="0.911" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addMarker"
@@ -66,10 +66,10 @@
         android:src="@android:drawable/ic_popup_sync"
         map:layout_constraintBottom_toBottomOf="parent"
         map:layout_constraintEnd_toEndOf="parent"
-        map:layout_constraintHorizontal_bias="0.95"
+        map:layout_constraintHorizontal_bias="0.954"
         map:layout_constraintStart_toStartOf="parent"
         map:layout_constraintTop_toTopOf="parent"
-        map:layout_constraintVertical_bias="0.85" />
+        map:layout_constraintVertical_bias="0.813" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -260,7 +260,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void initRemoveMarkerDialog(){
         alertDialog = new AlertDialog.Builder(this);
         alertDialog.setTitle("Delete Marker !");
-        alertDialog.setMessage("Do you want to delete the Marker!");
+        alertDialog.setMessage("Do you want to Edit/Delete the Marker?");
     }
 
     public void initInfoWindowClick(GoogleMap googleMap){
@@ -278,6 +278,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         dialog.dismiss();
+                    }
+                });
+                alertDialog.setNeutralButton("Edit", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+
                     }
                 });
                 alertDialog.show();
